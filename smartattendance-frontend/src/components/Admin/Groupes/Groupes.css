@@ -1,0 +1,238 @@
+.groupes-page {
+  width: 100%;
+  max-width: 1400px;
+}
+
+.btn-primary-groupe {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #00A651;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.btn-primary-groupe:hover {
+  background: #008f45;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 166, 81, 0.2);
+}
+
+.filter-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 120px;
+}
+
+.filter-group select {
+  flex: 1;
+  max-width: 400px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #00A651;
+  box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.1);
+}
+
+/* React-Select Container Styling */
+.react-select-container {
+  flex: 1;
+  max-width: 500px;
+  font-size: 1rem;
+}
+
+/* Make sure react-select fits properly in forms */
+.form-group .react-select-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* React-Select Custom Styling */
+.react-select__control {
+  min-height: 48px !important;
+  border-radius: 6px !important;
+  border-color: #d1d5db !important;
+  transition: all 0.2s !important;
+}
+
+.react-select__control:hover {
+  border-color: #00A651 !important;
+}
+
+.react-select__control--is-focused {
+  border-color: #00A651 !important;
+  box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.1) !important;
+}
+
+.react-select__control--is-disabled {
+  background-color: #f9fafb !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.react-select__option {
+  cursor: pointer !important;
+  padding: 10px 12px !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #00A651 !important;
+  color: white !important;
+}
+
+.react-select__option--is-focused {
+  background-color: #f0fdf4 !important;
+  color: #1e293b !important;
+}
+
+.react-select__option--is-focused.react-select__option--is-selected {
+  background-color: #00A651 !important;
+  color: white !important;
+}
+
+.react-select__placeholder {
+  color: #9ca3af !important;
+}
+
+.react-select__single-value {
+  color: #1e293b !important;
+}
+
+.react-select__indicator-separator {
+  background-color: #d1d5db !important;
+}
+
+.react-select__dropdown-indicator {
+  color: #6b7280 !important;
+}
+
+.react-select__dropdown-indicator:hover {
+  color: #00A651 !important;
+}
+
+.react-select__menu {
+  border-radius: 6px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  overflow: hidden !important;
+  
+}
+
+/* Animations for react-select */
+.react-select__menu-list {
+  padding: 4px 0 !important;
+}
+
+.annee-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.filiere-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filiere-code {
+  padding: 0.25rem 0.5rem;
+  background: #f0fdf4;
+  color: #00A651;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.btn-primary-create {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #00A651;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary-create:hover:not(:disabled) {
+  background: #008f45;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 166, 81, 0.2);
+}
+
+.btn-primary-create:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-group label {
+    min-width: auto;
+  }
+
+  .react-select-container {
+    width: 100%;
+    max-width: 100%;
+  }
+}

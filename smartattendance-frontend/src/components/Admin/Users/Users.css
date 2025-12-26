@@ -1,0 +1,61 @@
+.users-page {
+  width: 100%;
+  max-width: 1400px;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.role-badge.super-admin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-badge.admin {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.role-badge.enseignant {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.role-badge.student {
+  background: #f0fdf4;
+  color: #00A651;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #00A651;
+}
+
+.status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.user-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.user-edit-form p {
+  margin: 0;
+  font-size: 1rem;
+}
