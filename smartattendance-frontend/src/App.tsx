@@ -13,6 +13,7 @@ import StudentsList from './components/Admin/Students/StudentsList';
 import CoursList from './components/Admin/Cours/CoursList';
 import UsersList from './components/Admin/Users/UsersList';
 import AttendancePage from './components/Attendance/AttendancePage';
+import EnseignantsList from './components/Admin/Enseignants/EnseignantsList';
 
 function App() {
   return (
@@ -89,6 +90,15 @@ function App() {
           element={
             <DashboardLayout>
               <UsersList />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
+          path="/admin/enseignants"
+          element={
+            <DashboardLayout>
+              <EnseignantsList />
             </DashboardLayout>
           }
         />

@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # ← AJOUTER
 from app.database import engine, Base
 from app.routers import (
     auth, filieres, groupes, students, 
-    modules, cours, seances, recognition, attendance
+    modules, cours, seances, recognition, attendance, enseignants
 )
 from app.config import settings
 
@@ -34,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ← AJOUTER CETTE LIGNE POUR SERVIR LES FICHIERS STATIQUES
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 @app.on_event("startup")
 def load_models():
     from app.services.embedding_extractor import extractor
@@ -50,6 +54,7 @@ app.include_router(cours.router)
 app.include_router(seances.router)
 app.include_router(recognition.router)
 app.include_router(attendance.router) 
+app.include_router(enseignants.router)
 
 @app.get("/")
 def root():

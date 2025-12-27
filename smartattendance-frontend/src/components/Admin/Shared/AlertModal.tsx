@@ -51,7 +51,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
         
         <div className="alert-modal-footer">
           <button onClick={onClose} className={`btn-alert ${type}`}>
-            Compris
+            Ok
           </button>
         </div>
       </div>

@@ -11,3 +11,4 @@ class Filiere(Base):
     
     # Relations
     groupes = relationship("Groupe", back_populates="filiere")
+    modules = relationship("Module", back_populates="filiere")  # ← AJOUTER

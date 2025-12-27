@@ -41,8 +41,13 @@ const GroupeForm: React.FC<GroupeFormProps> = ({
 
   useEffect(() => {
     if (groupe) {
+      // Extraire le code court du nom complet (ex: "4IIR-G1" -> "G1")
+      const shortCode = groupe.code.includes('-') 
+        ? groupe.code.split('-')[1] 
+        : groupe.code;
+      
       setFormData({
-        code: groupe.code,
+        code: shortCode,
         filiere_id: groupe.filiere_id,
         annee: groupe.annee,
       });
@@ -91,6 +96,16 @@ const GroupeForm: React.FC<GroupeFormProps> = ({
     }
   };
 
+  // Générer le preview du nom complet
+  const getPreviewName = () => {
+    if (formData.filiere_id === 0 || !formData.code) return '';
+    const selectedFiliere = filieres.find(f => f.id === formData.filiere_id);
+    if (!selectedFiliere) return '';
+    return `${formData.annee}${selectedFiliere.code}-${formData.code}`;
+  };
+
+  const previewName = getPreviewName();
+
   // Prepare options for react-select
   const filiereOptions: SelectOption[] = filieres.map(f => ({
     value: f.id,
@@ -109,52 +124,54 @@ const GroupeForm: React.FC<GroupeFormProps> = ({
   const selectedAnnee = anneeOptions.find(opt => opt.value === formData.annee) || anneeOptions[0];
 
   const customStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    borderColor: state.isFocused ? '#00A651' : '#d1d5db',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(0, 166, 81, 0.1)' : 'none',
-    '&:hover': {
-      borderColor: '#00A651',
-    },
-    minHeight: '48px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  }),
-  menuPortal: (provided: any) => ({  // ← AJOUTER
-    ...provided,
-    zIndex: 9999,
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    zIndex: 9999,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    backgroundColor: state.isSelected
-      ? '#00A651'
-      : state.isFocused
-      ? '#f0fdf4'
-      : 'white',
-    color: state.isSelected ? 'white' : '#1e293b',
-    cursor: 'pointer',
-    '&:hover': {
-      backgroundColor: state.isSelected ? '#00A651' : '#f0fdf4',
-    },
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: '#9ca3af',
-  }),
-};
+    control: (provided: any, state: any) => ({
+      ...provided,
+      borderColor: state.isFocused ? '#00A651' : '#d1d5db',
+      boxShadow: state.isFocused ? '0 0 0 3px rgba(0, 166, 81, 0.1)' : 'none',
+      '&:hover': {
+        borderColor: '#00A651',
+      },
+      minHeight: '48px',
+      borderRadius: '6px',
+      cursor: 'pointer',
+    }),
+    menuPortal: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? '#00A651'
+        : state.isFocused
+        ? '#f0fdf4'
+        : 'white',
+      color: state.isSelected ? 'white' : '#1e293b',
+      cursor: 'pointer',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#00A651' : '#f0fdf4',
+      },
+    }),
+    placeholder: (provided: any) => ({
+      ...provided,
+      color: '#9ca3af',
+    }),
+  };
 
-  const handleFiliereChange = (selectedOption: SelectOption | null) => {
+  const handleFiliereChange = (newValue: unknown) => {
+    const selectedOption = newValue as SelectOption | null;
     setFormData({
       ...formData,
       filiere_id: selectedOption?.value || 0,
     });
   };
 
-  const handleAnneeChange = (selectedOption: SelectOption | null) => {
+  const handleAnneeChange = (newValue: unknown) => {
+    const selectedOption = newValue as SelectOption | null;
     setFormData({
       ...formData,
       annee: selectedOption?.value || 1,
@@ -181,6 +198,23 @@ const GroupeForm: React.FC<GroupeFormProps> = ({
       </div>
 
       <div className="form-group">
+        <label htmlFor="annee">Année *</label>
+        <Select<SelectOption>
+          options={anneeOptions}
+          value={selectedAnnee}
+          onChange={handleAnneeChange}
+          styles={customStyles}
+          placeholder="Sélectionner une année"
+          components={animatedComponents}
+          isDisabled={loading}
+          className="react-select-container"
+          classNamePrefix="react-select"
+          menuPortalTarget={document.body}
+          menuPosition="fixed"
+        />
+      </div>
+
+      <div className="form-group">
         <label htmlFor="code">Code du groupe *</label>
         <input
           id="code"
@@ -193,23 +227,12 @@ const GroupeForm: React.FC<GroupeFormProps> = ({
           disabled={loading}
           maxLength={10}
         />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="annee">Année *</label>
-        <Select<SelectOption>
-          options={anneeOptions}
-          value={selectedAnnee}
-          onChange={handleAnneeChange}
-          styles={customStyles}
-          placeholder="Sélectionner une année"
-          components={animatedComponents}
-          isDisabled={loading}
-          className="react-select-container"
-          classNamePrefix="react-select"
-          menuPortalTarget={document.body}  // ← AJOUTER
-          menuPosition="fixed"
-        />
+        {previewName && (
+          <div className="groupe-preview">
+            <span className="preview-label">Nom du groupe :</span>
+            <span className="preview-name">{previewName}</span>
+          </div>
+        )}
       </div>
 
       <div className="form-actions">

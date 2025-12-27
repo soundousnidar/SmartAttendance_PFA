@@ -388,3 +388,105 @@
     font-size: 0.5625rem;
   }
 }
+
+
+
+.filter-section-cours {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group-cours {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-group-cours label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.react-select-container-cours {
+  width: 300px;
+}
+
+/* Custom Scrollbar for Modal Content */
+.filiere-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 70vh;  /* ← LIMITER LA HAUTEUR */
+  overflow-y: auto;  /* ← ACTIVER LE SCROLL */
+  padding-right: 0.5rem;  /* ← ESPACE POUR LA SCROLLBAR */
+}
+
+/* Scrollbar Webkit (Chrome, Safari, Edge) */
+.filiere-form-compact::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filiere-form-compact::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.filiere-form-compact::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.filiere-form-compact::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Scrollbar Firefox */
+.filiere-form-compact {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Cibler uniquement le modal du formulaire cours */
+.cours-form-wrapper + * .modal-body,
+.modal-content:has(.cours-form-wrapper) .modal-body {
+  padding-right: 0px !important;
+  padding-top: 0px !important;
+}
+
+
+
+.filter-section-cours {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;  /* ← SUR UNE LIGNE */
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.filter-group-cours {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-group-cours label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.react-select-container-cours {
+  width: 250px;  /* ← LARGEUR FIXE */
+}

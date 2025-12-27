@@ -27,7 +27,8 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
   });
 
   const [modules, setModules] = useState<Module[]>([]);
-  const [groupes, setGroupes] = useState<Groupe[]>([]);
+  const [allGroupes, setAllGroupes] = useState<Groupe[]>([]);
+  const [filteredGroupes, setFilteredGroupes] = useState<Groupe[]>([]);
   const [enseignants, setEnseignants] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,8 +48,26 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
         heure_fin: cours.heure_fin,
         salle: cours.salle || '',
       });
+      
+      // Filtrer les groupes pour le module sélectionné
+      const selectedModule = modules.find(m => m.id === cours.module.id);
+      if (selectedModule) {
+        filterGroupesByModule(selectedModule);
+      }
     }
-  }, [cours]);
+  }, [cours, modules]);
+
+  // ← FILTRER GROUPES QUAND MODULE CHANGE
+  useEffect(() => {
+    if (formData.module_id > 0) {
+      const selectedModule = modules.find(m => m.id === formData.module_id);
+      if (selectedModule) {
+        filterGroupesByModule(selectedModule);
+      }
+    } else {
+      setFilteredGroupes([]);
+    }
+  }, [formData.module_id, allGroupes, modules]);
 
   const loadData = async () => {
     try {
@@ -59,11 +78,32 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
       ]);
 
       setModules(modulesData);
-      setGroupes(groupesData);
+      setAllGroupes(groupesData);
       setEnseignants(enseignantsData.filter((u: User) => u.role === 'enseignant'));
     } catch (error) {
       console.error('Erreur chargement données:', error);
     }
+  };
+
+  // ← FONCTION DE FILTRAGE
+  const filterGroupesByModule = (module: Module) => {
+    const filtered = allGroupes.filter(
+      g => g.filiere_id === module.filiere_id && g.annee === module.annee
+    );
+    setFilteredGroupes(filtered);
+    
+    // Si le groupe actuel n'est pas dans la liste filtrée, réinitialiser
+    if (formData.groupe_id > 0 && !filtered.find(g => g.id === formData.groupe_id)) {
+      setFormData(prev => ({ ...prev, groupe_id: 0 }));
+    }
+  };
+
+  const handleModuleChange = (moduleId: number) => {
+    setFormData({ 
+      ...formData, 
+      module_id: moduleId,
+      groupe_id: 0  // Réinitialiser le groupe
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,7 +126,6 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
   };
 
   const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-  
   const jourOptions = jours.map(j => ({ value: j, label: j }));
 
   const customStyles = {
@@ -119,19 +158,26 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
   };
 
   return (
+    <div className="cours-form-wrapper">  
     <form onSubmit={handleSubmit} className="filiere-form filiere-form-compact">
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="form-group form-group-compact">
         <label>Module *</label>
         <Select
-          options={modules.map((m) => ({ value: m.id, label: `${m.code} - ${m.nom}` }))}
+          options={modules.map((m) => ({ 
+            value: m.id, 
+            label: `${m.code} - ${m.nom} (${m.filiere?.code} - ${m.annee}ère année)` 
+          }))}
           value={
             modules
-              .map((m) => ({ value: m.id, label: `${m.code} - ${m.nom}` }))
+              .map((m) => ({ 
+                value: m.id, 
+                label: `${m.code} - ${m.nom} (${m.filiere?.code} - ${m.annee}ère année)` 
+              }))
               .find((opt) => opt.value === formData.module_id) || null
           }
-          onChange={(opt) => setFormData({ ...formData, module_id: opt?.value || 0 })}
+          onChange={(opt) => handleModuleChange(opt?.value || 0)}
           placeholder="Sélectionner un module"
           menuPortalTarget={document.body}
           menuPosition="fixed"
@@ -142,13 +188,21 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
       <div className="form-group form-group-compact">
         <label>Groupe *</label>
         <Select
-          options={groupes.map((g) => ({ value: g.id, label: g.code }))}
+          options={filteredGroupes.map((g) => ({ value: g.id, label: g.code }))}
           value={
-            groupes.map((g) => ({ value: g.id, label: g.code })).find((opt) => opt.value === formData.groupe_id) ||
-            null
+            filteredGroupes
+              .map((g) => ({ value: g.id, label: g.code }))
+              .find((opt) => opt.value === formData.groupe_id) || null
           }
           onChange={(opt) => setFormData({ ...formData, groupe_id: opt?.value || 0 })}
-          placeholder="Sélectionner un groupe"
+          placeholder={
+            formData.module_id === 0 
+              ? "Sélectionner d'abord un module" 
+              : filteredGroupes.length === 0
+              ? "Aucun groupe pour ce module"
+              : "Sélectionner un groupe"
+          }
+          isDisabled={formData.module_id === 0 || filteredGroupes.length === 0}
           menuPortalTarget={document.body}
           menuPosition="fixed"
           styles={customStyles}
@@ -225,6 +279,7 @@ const CoursForm: React.FC<CoursFormProps> = ({ cours, onSubmit, onCancel }) => {
         </button>
       </div>
     </form>
+    </div>
   );
 };
 

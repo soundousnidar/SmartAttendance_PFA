@@ -12,7 +12,8 @@ import {
   User, 
   Video, 
   CheckCircle,
-  Backpack
+  Backpack,
+  UserCheck  // ← AJOUTER POUR ENSEIGNANTS
 } from 'lucide-react';
 
 interface MenuItem {
@@ -53,6 +54,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       path: '/admin/students',
       icon: Backpack,
       label: 'Étudiants',
+      roles: ['admin', 'super_admin'],
+    },
+    {
+      path: '/admin/enseignants',  // ← AJOUTER
+      icon: UserCheck,
+      label: 'Enseignants',
       roles: ['admin', 'super_admin'],
     },
     {

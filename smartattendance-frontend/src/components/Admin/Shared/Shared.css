@@ -35,7 +35,7 @@
 }
 
 .modal-header {
-  padding: 1.5rem;
+  padding: 0.7rem;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
@@ -66,6 +66,7 @@
 
 .modal-body {
   padding: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 /* Table */
