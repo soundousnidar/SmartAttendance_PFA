@@ -124,6 +124,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       label: 'Mes présences',
       roles: ['student'],
     },
+
+    {
+      path: '/admin/auto-attendance',
+      icon: Video,
+      label: 'Surveillance Auto',
+      roles: ['admin', 'super_admin'],
+    },
   ];
 
   const filteredItems = menuItems.filter(
