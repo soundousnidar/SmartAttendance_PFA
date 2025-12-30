@@ -37,3 +37,4 @@ class CoursWithDetails(BaseModel):
     
     class Config:
         from_attributes = True
+        

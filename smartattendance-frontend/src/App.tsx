@@ -16,6 +16,7 @@ import AttendancePage from './components/Attendance/AttendancePage';
 import EnseignantsList from './components/Admin/Enseignants/EnseignantsList';
 import StudentSchedule from './components/Student/StudentSchedule';
 import StudentAttendance from './components/Student/StudentAttendance';
+import AutoAttendanceMonitor from './components/Attendance/AutoAttendanceMonitor';
 
 function App() {
   return (
@@ -101,6 +102,15 @@ function App() {
           element={
             <DashboardLayout>
               <EnseignantsList />
+            </DashboardLayout>
+          }
+        />
+
+        <Route
+          path="/admin/auto-attendance"
+          element={
+            <DashboardLayout>
+              <AutoAttendanceMonitor />
             </DashboardLayout>
           }
         />

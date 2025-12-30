@@ -1,9 +1,10 @@
-from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, Integer, ForeignKey, Float, DateTime, String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 
+# ✅ GARDER l'enum pour les autres fichiers qui l'importent
 class AttendanceStatus(str, enum.Enum):
     PRESENT = "present"
     LATE = "late"
@@ -17,7 +18,9 @@ class Attendance(Base):
     student_id = Column(Integer, ForeignKey("students.id"))
     confidence = Column(Float, nullable=False)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    status = Column(SQLEnum(AttendanceStatus), default=AttendanceStatus.PRESENT)
+    
+    # ✅ UTILISER String au lieu de SQLEnum
+    status = Column(String, nullable=False)
     
     # Relations
     seance = relationship("Seance", back_populates="attendances")

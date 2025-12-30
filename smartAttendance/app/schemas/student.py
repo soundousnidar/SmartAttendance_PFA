@@ -1,14 +1,23 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
+class UserInStudent(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    is_active: bool
+    
+    class Config:
+        from_attributes = True
+
+
 class StudentResponse(BaseModel):
     id: int
     user_id: int
-    full_name: str  # Vient de user
-    email: str      # Vient de user
-    is_active: bool # Vient de user
     groupe_id: Optional[int]
     photo_path: Optional[str]
+    user: UserInStudent  
     
     class Config:
         from_attributes = True

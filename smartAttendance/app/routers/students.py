@@ -63,26 +63,17 @@ def get_active_students(
     db: Session = Depends(get_db)
 ):
     """Liste des étudiants activés"""
-    active_users = db.query(User).filter(
-        User.role == UserRole.STUDENT,
-        User.is_active == True
+    # UTILISER joinedload pour charger user en une seule requête
+    from sqlalchemy.orm import joinedload
+    
+    students = db.query(Student).options(
+        joinedload(Student.user)
+    ).join(User).filter(
+        User.is_active == True,
+        User.role == UserRole.STUDENT
     ).all()
     
-    result = []
-    for user in active_users:
-        student = db.query(Student).filter(Student.user_id == user.id).first()
-        if student:
-            result.append({
-                "id": student.id,
-                "user_id": user.id,
-                "full_name": user.full_name,
-                "email": user.email,
-                "is_active": user.is_active,
-                "groupe_id": student.groupe_id,
-                "photo_path": student.photo_path
-            })
-    
-    return result
+    return students  # Retourner directement les objets Student
 
 @router.post("/{student_id}/upload-photo")
 async def upload_student_photo(
@@ -164,7 +155,7 @@ def activate_student(
     
     # Activer le user
     user = db.query(User).filter(User.id == student.user_id).first()
-    user.is_active = True
+    user.is_active = Trueactive
     db.commit()
     
     return {"message": "Student activated successfully"}
