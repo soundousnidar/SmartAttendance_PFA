@@ -14,6 +14,8 @@ import CoursList from './components/Admin/Cours/CoursList';
 import UsersList from './components/Admin/Users/UsersList';
 import AttendancePage from './components/Attendance/AttendancePage';
 import EnseignantsList from './components/Admin/Enseignants/EnseignantsList';
+import StudentSchedule from './components/Student/StudentSchedule';
+import StudentAttendance from './components/Student/StudentAttendance';
 
 function App() {
   return (
@@ -123,6 +125,22 @@ function App() {
             </DashboardLayout>
           }
         />
+        <Route
+  path="/student/schedule"
+  element={
+    <DashboardLayout>
+      <StudentSchedule />
+    </DashboardLayout>
+  }
+/>
+<Route
+  path="/student/attendance"
+  element={
+    <DashboardLayout>
+      <StudentAttendance />
+    </DashboardLayout>
+  }
+/>
       </Routes>
     </BrowserRouter>
   );

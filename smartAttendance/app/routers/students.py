@@ -214,3 +214,222 @@ def get_students_by_groupe(
             })
     
     return result
+
+@router.get("/me/stats")
+async def get_student_stats(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les statistiques d'un étudiant"""
+    
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    # Trouver l'étudiant
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Récupérer toutes les présences
+    from app.models.attendance import Attendance
+    attendances = db.query(Attendance).filter(
+        Attendance.student_id == student.id
+    ).all()
+    
+    total_cours = len(attendances)
+    presences = len([a for a in attendances if a.status == "present"])
+    absences = len([a for a in attendances if a.status == "absent"])
+    retards = len([a for a in attendances if a.status == "retard"])
+    
+    taux_presence = round((presences / total_cours * 100) if total_cours > 0 else 0, 1)
+    
+    return {
+        "totalCours": total_cours,
+        "presences": presences,
+        "absences": absences,
+        "retards": retards,
+        "tauxPresence": taux_presence
+    }
+
+
+@router.get("/me/schedule")
+async def get_student_schedule(
+    week: int = 0,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'emploi du temps d'un étudiant"""
+    from datetime import datetime, timedelta
+    
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Calculer les dates de la semaine
+    today = datetime.now()
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week)
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    # Récupérer les séances
+    from app.models.seance import Seance
+    from app.models.cours import Cours
+    
+    seances = db.query(Seance).join(Cours).filter(
+        Cours.groupe_id == student.groupe_id,
+        Seance.date >= start_of_week.date(),
+        Seance.date <= end_of_week.date()
+    ).all()
+    
+    schedule = []
+    day_mapping = {
+        0: "Lundi", 1: "Mardi", 2: "Mercredi",
+        3: "Jeudi", 4: "Vendredi", 5: "Samedi", 6: "Dimanche"
+    }
+    
+    color_mapping = {
+        "Développement Web": "bg-blue-500",
+        "Base de Données": "bg-green-500",
+        "Algorithmique": "bg-purple-500",
+        "Réseaux": "bg-orange-500",
+        "Sécurité": "bg-red-500",
+        "Anglais": "bg-indigo-500"
+    }
+    
+    for seance in seances:
+        cours = seance.cours
+        module = cours.module if cours else None
+        enseignant = cours.enseignant if cours else None
+        
+        schedule.append({
+            "id": seance.id,
+            "courseName": module.nom if module else "Cours",
+            "module": module.nom if module else "N/A",
+            "professor": enseignant.full_name if enseignant else "N/A",
+            "room": cours.salle if cours else "N/A",
+            "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut else "08:00",
+            "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin else "10:00",
+            "day": day_mapping.get(seance.date.weekday(), "Lundi"),
+            "color": color_mapping.get(module.nom if module else "", "bg-gray-500")
+        })
+    
+    return schedule
+
+@router.get("/me/attendance")
+async def get_student_attendance(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer l'historique des présences"""
+    
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    from app.models.attendance import Attendance
+    from app.models.seance import Seance
+    attendances = db.query(Attendance).filter(
+        Attendance.student_id == student.id
+    ).all()
+    
+    records = []
+    for attendance in attendances:
+        seance = attendance.seance
+        if seance:
+            cours = seance.cours
+            module = cours.module if cours else None
+            enseignant = cours.enseignant if cours else None
+            
+            records.append({
+                "id": attendance.id,
+                "courseName": module.nom if module else "Cours",  # ← CHANGÉ ICI
+                "module": module.nom if module else "N/A",
+                "date": seance.date.isoformat() if seance.date else None,
+                "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut else "N/A",
+                "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin else "N/A",
+                "status": attendance.status.lower(),  # ← Convertir en minuscule
+                "professor": enseignant.full_name if enseignant else "N/A",
+                "room": cours.salle if cours else "N/A"
+            })
+    
+    total = len(records)
+    present = len([r for r in records if r["status"] == "present"])
+    absent = len([r for r in records if r["status"] == "absent"])
+    late = len([r for r in records if r["status"] == "retard"])
+    rate = round((present / total * 100) if total > 0 else 0)
+    
+    return {
+        "records": records,
+        "stats": {
+            "totalSessions": total,
+            "present": present,
+            "absent": absent,
+            "late": late,
+            "attendanceRate": rate
+        }
+    }
+
+
+@router.get("/me/recent-courses")
+async def get_recent_courses(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Récupérer les cours récents pour le dashboard"""
+    from datetime import datetime, timedelta
+    
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Access forbidden")
+    
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    from app.models.seance import Seance
+    from app.models.cours import Cours
+    from app.models.attendance import Attendance
+    
+    today = datetime.now().date()
+    seances = db.query(Seance).join(Cours).filter(
+        Cours.groupe_id == student.groupe_id,
+        Seance.date <= today + timedelta(days=7)
+    ).order_by(Seance.date.desc()).limit(10).all()
+    
+    courses = []
+    for seance in seances:
+        cours = seance.cours
+        module = cours.module if cours else None
+        enseignant = cours.enseignant if cours else None
+        
+        attendance = db.query(Attendance).filter(
+            Attendance.seance_id == seance.id,
+            Attendance.student_id == student.id
+        ).first()
+        
+        status = "a_venir"
+        if attendance:
+            status = attendance.status
+        elif seance.date < today:
+            status = "absent"
+        
+        courses.append({
+            "id": seance.id,
+            "nom": cours.nom if cours else "N/A",
+            "module": module.nom if module else "N/A",
+            "date": seance.date.isoformat(),
+            "heure": f"{seance.heure_debut.strftime('%H:%M') if seance.heure_debut else '08:00'} - {seance.heure_fin.strftime('%H:%M') if seance.heure_fin else '10:00'}",
+            "salle": seance.salle or "N/A",
+            "professeur": enseignant.nom_complet if enseignant else "N/A",
+            "status": status
+        })
+    
+    return courses
