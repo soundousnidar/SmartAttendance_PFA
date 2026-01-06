@@ -18,7 +18,7 @@ class StudentResponse(BaseModel):
     groupe_id: Optional[int]
     photo_path: Optional[str]
     user: UserInStudent  
-    
+    presence_percentage: float
     class Config:
         from_attributes = True
 

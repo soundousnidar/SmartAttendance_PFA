@@ -18,6 +18,13 @@ import StudentSchedule from './components/Student/StudentSchedule';
 import StudentAttendance from './components/Student/StudentAttendance';
 import AutoAttendanceMonitor from './components/Attendance/AutoAttendanceMonitor';
 
+import Cours from './components/Teacher/cours';                  
+import EmploiDuTemps from './components/Teacher/EmploiDuTemps';
+import Etudiants from './components/Teacher/Etudiants';
+import Notifications from './components/Teacher/Notifications';
+import Presence from './components/Teacher/Presence';
+import Seances from './components/Teacher/Seances';
+
 function App() {
   return (
     <BrowserRouter>
@@ -116,12 +123,62 @@ function App() {
         />
         
         
-        {/* Teacher Routes */}
+{/* Teacher Routes */}
         <Route
           path="/teacher/dashboard"
           element={
             <DashboardLayout>
               <TeacherDashboard />
+            </DashboardLayout>
+          }
+        />
+
+        {/* === Nouvelles routes pour les pages Teacher === */}
+        <Route
+          path="/teacher/cours"
+          element={
+            <DashboardLayout>
+              <Cours />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/teacher/emploi"
+          element={
+            <DashboardLayout>
+              <EmploiDuTemps />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/teacher/etudiants"
+          element={
+            <DashboardLayout>
+              <Etudiants />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/teacher/notification"
+          element={
+            <DashboardLayout>
+              <Notifications />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/teacher/presence"
+          element={
+            <DashboardLayout>
+              <Presence />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/teacher/seances"
+          element={
+            <DashboardLayout>
+              <Seances />
             </DashboardLayout>
           }
         />

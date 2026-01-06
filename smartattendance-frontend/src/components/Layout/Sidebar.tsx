@@ -13,7 +13,10 @@ import {
   Video, 
   CheckCircle,
   Backpack,
-  UserCheck  // ← AJOUTER POUR ENSEIGNANTS
+  UserCheck,
+  Bell,              // ← pour Notifications
+  ClipboardList,     // ← pour Rapports / Prise de présence
+  UserCog  // ← AJOUTER POUR ENSEIGNANTS
 } from 'lucide-react';
 
 interface MenuItem {
@@ -81,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       roles: ['super_admin'],
     },
     // ENSEIGNANT
-    {
+{
       path: '/teacher/dashboard',
       icon: LayoutDashboard,
       label: 'Tableau de bord',
@@ -94,15 +97,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       roles: ['enseignant'],
     },
     {
+      path: '/teacher/emploi',
+      icon: Calendar,
+      label: 'Emploi du temps',
+      roles: ['enseignant'],
+    },
+    {
+      path: '/teacher/etudiants',
+      icon: UserCog,
+      label: 'Étudiants',
+      roles: ['enseignant'],
+    },
+    {
       path: '/teacher/seances',
       icon: Video,
       label: 'Séances',
       roles: ['enseignant'],
     },
     {
-      path: '/teacher/attendance',
-      icon: CheckCircle,
-      label: 'Présences',
+      path: '/teacher/presence',
+      icon: ClipboardList,
+      label: 'Prise de présence',
+      roles: ['enseignant'],
+    },
+    {
+      path: '/teacher/notification',
+      icon: Bell,
+      label: 'Notifications',
       roles: ['enseignant'],
     },
     // STUDENT

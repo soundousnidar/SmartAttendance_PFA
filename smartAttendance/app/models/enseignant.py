@@ -1,14 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, String, ForeignKey, LargeBinary
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from app.database import Base
+from typing import Optional
+
 
 class Enseignant(Base):
     __tablename__ = "enseignants"
     
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    photo_path = Column(String, nullable=True)
-    embedding = Column(LargeBinary, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    photo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    embedding: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
     
     # Relations
-    user = relationship("User")
+    user: Mapped["User"] = relationship("User")

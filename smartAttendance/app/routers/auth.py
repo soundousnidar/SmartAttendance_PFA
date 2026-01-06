@@ -66,14 +66,21 @@ def login(
     user = db.query(User).filter(
         (User.email == login_data.username) | (User.full_name == login_data.username)
     ).first()
-    
-    if not user or not verify_password(login_data.password, user.hashed_password):
+
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email/name or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
+    if not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email/name or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

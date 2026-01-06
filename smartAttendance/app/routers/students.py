@@ -7,7 +7,13 @@ from app.models.user import User, UserRole
 from app.schemas.student import StudentResponse, StudentActivateRequest
 from app.utils.dependencies import require_role, get_current_user
 from app.services.embedding_extractor import extractor
+from app.services.presence_service import calculate_presence_percentage
+from datetime import date, datetime, time
+from typing import cast
 import os
+import logging
+
+logger = logging.getLogger(__name__) # logger: do not configure handlers here, use app logging config
 
 router = APIRouter(prefix="/students", tags=["Students"])
 
@@ -29,14 +35,19 @@ def get_pending_students(
         student = db.query(Student).filter(Student.user_id == user.id).first()
         
         if student:
+            presence = calculate_presence_percentage(student.id, db)
             result.append({
                 "id": student.id,
                 "user_id": user.id,
-                "full_name": user.full_name,
-                "email": user.email,
-                "is_active": user.is_active,
                 "groupe_id": student.groupe_id,
-                "photo_path": student.photo_path
+                "photo_path": student.photo_path,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "is_active": user.is_active
+                },
+                "presence_percentage": presence
             })
         else:
             # Créer student vide si n'existe pas
@@ -44,15 +55,19 @@ def get_pending_students(
             db.add(new_student)
             db.commit()
             db.refresh(new_student)
-            
+            presence = calculate_presence_percentage(new_student.id, db)
             result.append({
                 "id": new_student.id,
                 "user_id": user.id,
-                "full_name": user.full_name,
-                "email": user.email,
-                "is_active": user.is_active,
                 "groupe_id": None,
-                "photo_path": None
+                "photo_path": None,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "is_active": user.is_active
+                },
+                "presence_percentage": presence
             })
     
     return result
@@ -73,7 +88,43 @@ def get_active_students(
         User.role == UserRole.STUDENT
     ).all()
     
-    return students  # Retourner directement les objets Student
+    result = []
+    for s in students:
+        # Skip if user relationship is missing
+        if not getattr(s, "user", None):
+            logger.warning("Orphan Student detected in /students/active: student_id=%s user_id=%s", s.id, s.user_id)
+            continue
+        presence = calculate_presence_percentage(s.id, db)
+        result.append({
+            "id": s.id,
+            "user_id": s.user_id,
+            "groupe_id": getattr(s, "groupe_id", None),
+            "photo_path": getattr(s, "photo_path", None),
+            "user": {
+                "id": s.user.id,
+                "email": s.user.email,
+                "full_name": s.user.full_name,
+                "is_active": s.user.is_active
+            },
+            "presence_percentage": presence
+        })
+    
+    return result
+
+
+@router.get('/admin/orphan-students')
+def get_orphan_students(
+    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SUPER_ADMIN])),
+    db: Session = Depends(get_db)
+):
+    """Return students whose `user_id` has no matching User (for debugging/cleanup)."""
+    # Outer join with User and filter where User.id is None
+    from sqlalchemy import and_, or_, not_
+    orphans = db.query(Student).outerjoin(User, Student.user_id == User.id).filter(User.id == None).all()
+    result = [{"student_id": s.id, "user_id": s.user_id} for s in orphans]
+    if result:
+        logger.warning("Found %s orphaned students", len(result))
+    return result
 
 @router.post("/{student_id}/upload-photo")
 async def upload_student_photo(
@@ -88,6 +139,8 @@ async def upload_student_photo(
         raise HTTPException(status_code=404, detail="Student not found")
     
     user = db.query(User).filter(User.id == student.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Lire image
     image_bytes = await file.read()
@@ -103,9 +156,9 @@ async def upload_student_photo(
     with open(photo_path, "wb") as f:
         f.write(image_bytes)
     
-    # Mettre à jour student
-    student.photo_path = photo_path
-    student.embedding = embedding.tobytes()
+    # Mettre à jour student (use setattr for type-checker safety)
+    setattr(student, "photo_path", photo_path)
+    setattr(student, "embedding", embedding.tobytes())
     
     # Créer embedding vérifié
     student_emb = StudentEmbedding(
@@ -150,12 +203,14 @@ def activate_student(
     if not student.groupe_id:
         raise HTTPException(status_code=400, detail="Student must have a groupe assigned")
     
-    if not student.photo_path or not student.embedding:
+    if student.photo_path is None or student.embedding is None:
         raise HTTPException(status_code=400, detail="Student must have a photo uploaded")
-    
+
     # Activer le user
     user = db.query(User).filter(User.id == student.user_id).first()
-    user.is_active = Trueactive
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    setattr(user, "is_active", True)
     db.commit()
     
     return {"message": "Student activated successfully"}
@@ -193,16 +248,23 @@ def get_students_by_groupe(
     result = []
     for student in students:
         user = db.query(User).filter(User.id == student.user_id).first()
-        if user:
-            result.append({
-                "id": student.id,
-                "user_id": user.id,
-                "full_name": user.full_name,
+        if not user:
+            logger.warning("Orphan Student detected in /students/groupe/%s: student_id=%s user_id=%s", groupe_id, student.id, student.user_id)
+            continue
+        presence = calculate_presence_percentage(student.id, db)
+        result.append({
+            "id": student.id,
+            "user_id": user.id,
+            "groupe_id": student.groupe_id,
+            "photo_path": student.photo_path,
+            "user": {
+                "id": user.id,
                 "email": user.email,
-                "is_active": user.is_active,
-                "groupe_id": student.groupe_id,
-                "photo_path": student.photo_path
-            })
+                "full_name": user.full_name,
+                "is_active": user.is_active
+            },
+            "presence_percentage": presence
+        })
     
     return result
 
@@ -229,9 +291,9 @@ async def get_student_stats(
     ).all()
     
     total_cours = len(attendances)
-    presences = len([a for a in attendances if a.status == "present"])
-    absences = len([a for a in attendances if a.status == "absent"])
-    retards = len([a for a in attendances if a.status == "retard"])
+    presences = sum(1 for a in attendances if str(a.status).lower() == "present")
+    absences = sum(1 for a in attendances if str(a.status).lower() == "absent")
+    retards = sum(1 for a in attendances if str(a.status).lower() == "retard")
     
     taux_presence = round((presences / total_cours * 100) if total_cours > 0 else 0, 1)
     
@@ -302,8 +364,8 @@ async def get_student_schedule(
             "module": module.nom if module else "N/A",
             "professor": enseignant.full_name if enseignant else "N/A",
             "room": cours.salle if cours else "N/A",
-            "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut else "08:00",
-            "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin else "10:00",
+            "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut is not None else "08:00",
+            "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin is not None else "10:00",
             "day": day_mapping.get(seance.date.weekday(), "Lundi"),
             "color": color_mapping.get(module.nom if module else "", "bg-gray-500")
         })
@@ -343,9 +405,9 @@ async def get_student_attendance(
                 "id": attendance.id,
                 "courseName": module.nom if module else "Cours",  # ← CHANGÉ ICI
                 "module": module.nom if module else "N/A",
-                "date": seance.date.isoformat() if seance.date else None,
-                "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut else "N/A",
-                "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin else "N/A",
+                "date": seance.date.isoformat() if seance.date is not None else None,
+                "startTime": seance.heure_debut.strftime("%H:%M") if seance.heure_debut is not None else "N/A",
+                "endTime": seance.heure_fin.strftime("%H:%M") if seance.heure_fin is not None else "N/A",
                 "status": attendance.status.lower(),  # ← Convertir en minuscule
                 "professor": enseignant.full_name if enseignant else "N/A",
                 "room": cours.salle if cours else "N/A"
@@ -407,17 +469,25 @@ async def get_recent_courses(
         ).first()
         
         status = "a_venir"
-        if attendance:
-            status = attendance.status
-        elif seance.date < today:
-            status = "absent"
         
+        seance_date = cast(datetime, seance.date).date()
+
+        if attendance is not None:
+            status = attendance.status
+        elif seance_date < today:
+            status = "absent"
+        else:
+            status = "en_cours"
+
+        heure_debut = cast(time | None, seance.heure_debut)
+        heure_fin = cast(time | None, seance.heure_fin)        
         courses.append({
             "id": seance.id,
             "nom": cours.nom if cours else "N/A",
             "module": module.nom if module else "N/A",
             "date": seance.date.isoformat(),
-            "heure": f"{seance.heure_debut.strftime('%H:%M') if seance.heure_debut else '08:00'} - {seance.heure_fin.strftime('%H:%M') if seance.heure_fin else '10:00'}",
+            "heure": (f"{heure_debut.strftime('%H:%M') if heure_debut else '08:00'} - "
+                      f"{heure_fin.strftime('%H:%M') if heure_fin else '10:00'}"),
             "salle": seance.salle or "N/A",
             "professeur": enseignant.nom_complet if enseignant else "N/A",
             "status": status

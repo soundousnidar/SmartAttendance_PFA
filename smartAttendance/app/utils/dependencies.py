@@ -37,7 +37,11 @@ def get_current_user(
         raise credentials_exception
     return user
 
-def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+from typing import Optional
+
+def get_current_active_user(current_user: Optional[User] = Depends(get_current_user)) -> User:
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user

@@ -27,6 +27,23 @@ app = FastAPI(
     version="2.0.0"
 )
 
+import logging
+import traceback
+logger = logging.getLogger(__name__)
+
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(TypeError)
+async def type_error_handler(request: Request, exc: TypeError):
+    """Catch TypeErrors (e.g., invalid conditional operand with SQLAlchemy ColumnElement) and log details."""
+    msg = str(exc)
+    # Only log verbose details for known SQLAlchemy ColumnElement errors
+    if "ColumnElement" in msg or "Invalid conditional operand" in msg:
+        logger.error("TypeError during request %s %s: %s", request.method, request.url, msg)
+        logger.error(traceback.format_exc())
+    return JSONResponse(status_code=500, content={"detail": "Internal TypeError occurred", "message": msg})
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
